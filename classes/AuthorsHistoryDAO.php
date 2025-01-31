@@ -71,29 +71,45 @@ class AuthorsHistoryDAO extends DAO
     }
 
     public function getAuthorSubmissions($contextId, $orcid, $email, $givenName, $itemsPerPageLimit)
-    {
-        $authorsByEmail = $this->getAuthorsByEmail($email);
-        $authors = (sizeof($authorsByEmail) > $itemsPerPageLimit) ? $this->getAuthorIdByGivenNameAndEmail($givenName, $email) : $authorsByEmail;
+	{
+		$authorsByEmail = $this->getAuthorsByEmail($email);
+		$authors = (sizeof($authorsByEmail) > $itemsPerPageLimit) ? $this->getAuthorIdByGivenNameAndEmail($givenName, $email) : $authorsByEmail;
 
-        if ($orcid) {
-            $authorsFromOrcid = $this->getAuthorsByORCID($orcid);
-            $authors = array_unique(array_merge($authors, $authorsFromOrcid));
-        }
+		if ($orcid) {
+			$authorsFromOrcid = $this->getAuthorsByORCID($orcid);
+			$authors = array_unique(array_merge($authors, $authorsFromOrcid));
+		}
 
-        $submissions = array();
-        foreach ($authors as $authorId) {
-            $author = Repo::author()->get($authorId);
+		$submissions = array();
+		$addedSubmissionIds = array();
+		$minYearThreshold = strtotime('2020-01-01 00:00:00'); // 2020 start timestamp
 
-            if (!is_null($author)) {
-                $authorPublication = Repo::publication()->get($author->getData('publicationId'));
-                $authorSubmission = Repo::submission()->get($authorPublication->getData('submissionId'));
+		foreach ($authors as $authorId) {
+			$author = Repo::author()->get($authorId);
 
-                if ($authorSubmission->getData('contextId') == $contextId && $authorSubmission->getData('dateSubmitted') && !in_array($authorSubmission, $submissions)) {
-                    $submissions[] = $authorSubmission;
-                }
-            }
-        }
+			if (!is_null($author)) {
+				$authorPublication = Repo::publication()->get($author->getData('publicationId'));
+				$submissionId = $authorPublication->getData('submissionId');
 
-        return $submissions;
-    }
+				if (in_array($submissionId, $addedSubmissionIds)) {
+					continue;
+				}
+
+				$authorSubmission = Repo::submission()->get($submissionId);
+				$submissionDate = $authorSubmission->getData('dateSubmitted');
+				
+				// Date check: If it is a valid date and is 2020 or later
+				if (
+					$authorSubmission->getData('contextId') == $contextId 
+					&& $submissionDate 
+					&& strtotime($submissionDate) >= $minYearThreshold
+				) {
+					$submissions[] = $authorSubmission;
+					$addedSubmissionIds[] = $submissionId;
+				}
+			}
+		}
+
+		return $submissions;
+	}
 }

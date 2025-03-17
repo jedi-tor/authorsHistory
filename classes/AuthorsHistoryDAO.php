@@ -99,10 +99,12 @@ class AuthorsHistoryDAO extends DAO
 				$submissionDate = $authorSubmission->getData('dateSubmitted');
 				
 				// Date check: If it is a valid date and is 2020 or later
+				// Also check if submission is not incomplete
 				if (
 					$authorSubmission->getData('contextId') == $contextId 
 					&& $submissionDate 
 					&& strtotime($submissionDate) >= $minYearThreshold
+					&& !$authorSubmission->getData('submissionProgress') // Submission is not incomplete
 				) {
 					$submissions[] = $authorSubmission;
 					$addedSubmissionIds[] = $submissionId;

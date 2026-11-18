@@ -22,6 +22,9 @@ use APP\publication\Publication;
 
 class AuthorsHistoryDAO extends DAO
 {
+    // Only submissions sent on or after this date are listed
+    private const MIN_DATE_SUBMITTED = '2020-01-01 00:00:00';
+
     private function executeQuery($query)
     {
         $result = $query->get();
@@ -45,6 +48,7 @@ class AuthorsHistoryDAO extends DAO
             ->where('ast.setting_value', $orcid)
             ->where('s.context_id', $contextId)
             ->where('s.submission_progress', '=', '')
+            ->where('s.date_submitted', '>=', self::MIN_DATE_SUBMITTED)
             ->select('a.author_id', 's.submission_id');
 
         return $this->executeQuery($query);
@@ -58,6 +62,7 @@ class AuthorsHistoryDAO extends DAO
             ->where('a.email', $email)
             ->where('s.context_id', $contextId)
             ->where('s.submission_progress', '=', '')
+            ->where('s.date_submitted', '>=', self::MIN_DATE_SUBMITTED)
             ->select('a.author_id', 's.submission_id');
 
         if ($executeQuery) {
@@ -78,6 +83,7 @@ class AuthorsHistoryDAO extends DAO
             ->where('a.email', $email)
             ->where('s.context_id', $contextId)
             ->where('s.submission_progress', '=', '')
+            ->where('s.date_submitted', '>=', self::MIN_DATE_SUBMITTED)
             ->select('a.author_id', 's.submission_id');
 
         return $this->executeQuery($query);

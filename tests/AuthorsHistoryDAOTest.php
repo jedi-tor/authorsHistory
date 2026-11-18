@@ -1,5 +1,6 @@
 <?php
 
+use PKP\core\Core;
 use PKP\tests\DatabaseTestCase;
 use APP\facades\Repo;
 use APP\submission\Submission;
@@ -59,6 +60,7 @@ class AuthorsHistoryDAOTest extends DatabaseTestCase
         $submission = new Submission();
         $submission->setData('contextId', $this->contextId);
         $submission->setData('submissionProgress', '');
+        $submission->setData('dateSubmitted', Core::getCurrentDate());
         $publication = new Publication();
 
         $submissionId = Repo::submission()->add($submission, $publication, $context);
